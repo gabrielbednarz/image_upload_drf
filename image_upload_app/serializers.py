@@ -36,12 +36,10 @@ class ExpiringLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExpiringLink
-        fields = ['id', 'image', 'token', 'expiry_seconds', 'is_expired']
+        fields = ['id', 'image', 'token', 'is_expired']
 
-    def validate_expiry_seconds(self, value):
-        if value < 300 or value > 30000:
-            raise serializers.ValidationError("expiry_seconds must be between 300 and 30000.")
-        return value
+    def get_is_expired(self, obj):
+        return obj.is_expired()
 
     def create(self, validated_data):
         user = self.context['request'].user
@@ -51,6 +49,3 @@ class ExpiringLinkSerializer(serializers.ModelSerializer):
         image = get_object_or_404(Image, id=image_id, user=user)
         expiring_link_instance = ExpiringLink.objects.create(image=image, **validated_data)
         return expiring_link_instance
-
-    def get_is_expired(self, obj):
-        return obj.is_expired()
