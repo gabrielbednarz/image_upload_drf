@@ -24,8 +24,12 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'image', 'uploaded_at']
 
     def create(self, validated_data):
-        user = self.context['request'].user
+        print(self.data)
+        # user = self.context['request'].user
+        user = CustomUser.objects.first()
+        print(validated_data)
         validated_data.pop('user', None)  # If using curl
+        print(validated_data)
         image_instance = Image.objects.create(user=user, **validated_data)
         return image_instance
 

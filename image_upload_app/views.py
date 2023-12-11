@@ -18,13 +18,16 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ImageViewSet(viewsets.ModelViewSet):
     serializer_class = ImageSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = []
+    # authentication_classes = []
 
     def get_queryset(self):
         return Image.objects.filter(user=self.request.user)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    # def perform_create(self, serializer):
+    #     user = CustomUser.objects.first()
+        # serializer.save(user=user)
 
 
 class AccountTierViewSet(viewsets.ReadOnlyModelViewSet):
