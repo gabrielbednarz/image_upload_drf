@@ -21,20 +21,6 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         return CustomUser.objects.filter(id=self.request.user.id)
 
 
-# class ImageViewSet(viewsets.ModelViewSet):
-#     serializer_class = ImageSerializer
-#     # permission_classes = [permissions.IsAuthenticated]
-#     permission_classes = []
-#
-#     def get_queryset(self):
-#         # Check if the user is authenticated
-#         if self.request.user.is_authenticated:
-#             return Image.objects.filter(user=self.request.user)
-#         else:
-#             # Return an empty queryset if the user is not authenticated
-#             return Image.objects.none()
-
-
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
@@ -47,22 +33,16 @@ class ImageViewSet(viewsets.ModelViewSet):
         if not user_name:
             return Response({"error": "Invalid or missing token"}, status=status.HTTP_403_FORBIDDEN)
 
-        # Proceed with image creation
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer, user_name=user_name)
+        # Modify request data to include 'user_name' dynamically
+        request.data._mutable = True
+        request.data['user_name'] = user_name
+        request.data._mutable = False
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def perform_create(self, serializer, user_name=None):
-        serializer.save(user_name=user_name)
-
+        return super(ImageViewSet, self).create(request, *args, **kwargs)
 class AccountTierViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AccountTier.objects.all()
     serializer_class = AccountTierSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
 
 class ExpiringLinkViewSet(viewsets.ModelViewSet):
     serializer_class = ExpiringLinkSerializer

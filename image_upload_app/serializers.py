@@ -15,13 +15,14 @@ class AccountTierSerializer(serializers.ModelSerializer):
         model = AccountTier
         fields = ['id', 'name']
 
+
 class ImageSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
-    image_url = serializers.SerializerMethodField()  # Correctly define image_url as a SerializerMethodField
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Image
-        fields = ['id', 'user', 'image', 'uploaded_at', 'image_url']  # Ensure fields match your model and serializer methods
+        fields = ['id', 'user', 'image', 'uploaded_at', 'image_url']
 
     def get_image_url(self, obj):
         request = self.context.get('request')
@@ -30,11 +31,11 @@ class ImageSerializer(serializers.ModelSerializer):
         return None
 
     def get_user(self, obj):
-        # Use the user_name passed during save, if available
-        return getattr(obj, 'user_name', None)
+        # Return the 'user_name' if it's passed in the context, otherwise None
+        return self.context['request'].data.get('user_name', None)
 
     def create(self, validated_data):
-        # Remove 'user_name' from validated_data if present
+        # Remove 'user_name' as it's not a model field
         validated_data.pop('user_name', None)
         return super().create(validated_data)
 
