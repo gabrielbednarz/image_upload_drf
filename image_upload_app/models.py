@@ -25,7 +25,7 @@ class CustomUser(AbstractUser):
 
 
 class Image(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
     image = models.ImageField(upload_to='images/uploads/', validators=[validate_image_file_type])
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

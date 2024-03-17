@@ -31,3 +31,6 @@ venv/
 # IDE-related
 .idea/
 .vscode/
+
+# Other
+media/images/uploads/

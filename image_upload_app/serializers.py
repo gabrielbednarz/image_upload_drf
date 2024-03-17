@@ -15,24 +15,28 @@ class AccountTierSerializer(serializers.ModelSerializer):
         model = AccountTier
         fields = ['id', 'name']
 
-
 class ImageSerializer(serializers.ModelSerializer):
-    user = CustomUserSerializer(read_only=True)
+    user = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()  # Correctly define image_url as a SerializerMethodField
 
     class Meta:
         model = Image
-        fields = ['id', 'user', 'image', 'uploaded_at']
+        fields = ['id', 'user', 'image', 'uploaded_at', 'image_url']  # Ensure fields match your model and serializer methods
+
+    def get_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        return None
+
+    def get_user(self, obj):
+        # Use the user_name passed during save, if available
+        return getattr(obj, 'user_name', None)
 
     def create(self, validated_data):
-        print(self.data)
-        # user = self.context['request'].user
-        user = CustomUser.objects.first()
-        print(validated_data)
-        validated_data.pop('user', None)  # If using curl
-        print(validated_data)
-        image_instance = Image.objects.create(user=user, **validated_data)
-        return image_instance
-
+        # Remove 'user_name' from validated_data if present
+        validated_data.pop('user_name', None)
+        return super().create(validated_data)
 
 class ExpiringLinkSerializer(serializers.ModelSerializer):
     image = ImageSerializer(read_only=True)

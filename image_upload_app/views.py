@@ -2,9 +2,14 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import CustomUser, Image, ExpiringLink, AccountTier
-from .serializers import CustomUserSerializer, ImageSerializer, ExpiringLinkSerializer, AccountTierSerializer
+from .serializers import *
+from rest_framework.permissions import AllowAny
 
-
+VALID_TOKENS = {
+    'token123': 'User1',
+    'token456': 'User2',
+    'token789': 'User3',
+}
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
@@ -16,19 +21,42 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         return CustomUser.objects.filter(id=self.request.user.id)
 
 
+# class ImageViewSet(viewsets.ModelViewSet):
+#     serializer_class = ImageSerializer
+#     # permission_classes = [permissions.IsAuthenticated]
+#     permission_classes = []
+#
+#     def get_queryset(self):
+#         # Check if the user is authenticated
+#         if self.request.user.is_authenticated:
+#             return Image.objects.filter(user=self.request.user)
+#         else:
+#             # Return an empty queryset if the user is not authenticated
+#             return Image.objects.none()
+
+
 class ImageViewSet(viewsets.ModelViewSet):
+    queryset = Image.objects.all()
     serializer_class = ImageSerializer
-    # permission_classes = [permissions.IsAuthenticated]
-    permission_classes = []
-    # authentication_classes = []
+    permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        return Image.objects.filter(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        token = request.data.get('token')
+        user_name = VALID_TOKENS.get(token)
 
-    # def perform_create(self, serializer):
-    #     user = CustomUser.objects.first()
-        # serializer.save(user=user)
+        if not user_name:
+            return Response({"error": "Invalid or missing token"}, status=status.HTTP_403_FORBIDDEN)
 
+        # Proceed with image creation
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer, user_name=user_name)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer, user_name=None):
+        serializer.save(user_name=user_name)
 
 class AccountTierViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AccountTier.objects.all()
