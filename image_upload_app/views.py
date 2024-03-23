@@ -11,6 +11,8 @@ VALID_TOKENS = {
     'token456': 'User2',
     'token789': 'User3',
 }
+
+
 # This is a simple, in-memory mapping. For demonstration purposes only.
 # TEMP_TOKEN_USER_MAPPING = {}
 
@@ -51,18 +53,22 @@ class ImageViewSet(viewsets.ModelViewSet):
 class AccountTierViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AccountTier.objects.all()
     serializer_class = AccountTierSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [AllowAny]
+
 
 class ExpiringLinkViewSet(viewsets.ModelViewSet):
     serializer_class = ExpiringLinkSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = []  # Empty, matching your requirement to not use Django's built-in permissions
 
     def get_queryset(self):
-        return ExpiringLink.objects.filter(image__user=self.request.user)
+        # Simply return all ExpiringLink objects.
+        return ExpiringLink.objects.all()
 
-    @action(detail=True, methods=['get'])
-    def fetch_link(self, request, pk=None):
-        expiring_link = self.get_object()
-        if expiring_link.is_expired():
-            return Response({'detail': 'Link has expired'}, status=status.HTTP_410_GONE)
-        return Response({'image_url': expiring_link.image.image.url})
+    # @action(detail=False, methods=['get'])
+    # def list_links(self, request):
+    #     # This custom action isn't necessary unless you want to customize
+    #     # the response further than what the default 'list' action provides.
+    #     # For simplicity, you could rely on the default 'list' implementation.
+    #     queryset = self.get_queryset()
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response(serializer.data)
