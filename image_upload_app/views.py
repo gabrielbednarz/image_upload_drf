@@ -4,12 +4,15 @@ from rest_framework.response import Response
 from .models import CustomUser, Image, ExpiringLink, AccountTier
 from .serializers import *
 from rest_framework.permissions import AllowAny
+from .constants import TEMP_TOKEN_USER_MAPPING
 
 VALID_TOKENS = {
     'token123': 'User1',
     'token456': 'User2',
     'token789': 'User3',
 }
+# This is a simple, in-memory mapping. For demonstration purposes only.
+# TEMP_TOKEN_USER_MAPPING = {}
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CustomUser.objects.all()
@@ -34,16 +37,15 @@ class ImageViewSet(viewsets.ModelViewSet):
         if not user_name:
             return Response({"error": "Invalid or missing token"}, status=status.HTTP_403_FORBIDDEN)
 
-        # Modify request data to include 'user_name' dynamically
-        request.data._mutable = True
-        request.data['user_name'] = user_name
-        request.data._mutable = False
+        # Update the temporary mapping with the image ID and user name.
+        # You'll save the image first to get its ID.
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        image = serializer.save()  # This now contains the image instance, including its ID.
+        TEMP_TOKEN_USER_MAPPING[image.id] = user_name  # Map image ID to user_name.
 
-        return super(ImageViewSet, self).create(request, *args, **kwargs)
-
-
-
-
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class AccountTierViewSet(viewsets.ReadOnlyModelViewSet):

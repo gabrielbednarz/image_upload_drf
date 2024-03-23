@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models import CustomUser, Image, AccountTier, ExpiringLink
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from .constants import TEMP_TOKEN_USER_MAPPING
+# TEMP_TOKEN_USER_MAPPING = {}
+
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -30,9 +33,14 @@ class ImageSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.image.url)
         return None
 
-    def get_user(self, obj):
-        return self.context['request'].data.get('user_name', None)
+    # def get_user(self, obj):
+    #     return obj.user.username if obj.user else None
+    #
+    #     # return self.context['request'].data.get('user_name', None)
 
+    def get_user(self, obj):
+        # Use the temporary mapping to get the user name based on the image ID.
+        return TEMP_TOKEN_USER_MAPPING.get(obj.id)
     def create(self, validated_data):
         validated_data.pop('user_name', None)
         return super().create(validated_data)
