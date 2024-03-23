@@ -10,6 +10,7 @@ VALID_TOKENS = {
     'token456': 'User2',
     'token789': 'User3',
 }
+
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
@@ -39,6 +40,12 @@ class ImageViewSet(viewsets.ModelViewSet):
         request.data._mutable = False
 
         return super(ImageViewSet, self).create(request, *args, **kwargs)
+
+
+
+
+
+
 class AccountTierViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AccountTier.objects.all()
     serializer_class = AccountTierSerializer

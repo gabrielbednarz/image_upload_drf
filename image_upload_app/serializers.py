@@ -31,11 +31,9 @@ class ImageSerializer(serializers.ModelSerializer):
         return None
 
     def get_user(self, obj):
-        # Return the 'user_name' if it's passed in the context, otherwise None
         return self.context['request'].data.get('user_name', None)
 
     def create(self, validated_data):
-        # Remove 'user_name' as it's not a model field
         validated_data.pop('user_name', None)
         return super().create(validated_data)
 
