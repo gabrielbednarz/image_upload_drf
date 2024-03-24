@@ -2,9 +2,7 @@ from rest_framework import serializers
 from .models import CustomUser, Image, AccountTier, ExpiringLink
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from .constants import TEMP_TOKEN_USER_MAPPING
-# TEMP_TOKEN_USER_MAPPING = {}
-
+from .constants import TEMP_TOKEN_USER_MAPPING, VALID_TOKENS
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -29,6 +27,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, obj):
         request = self.context.get('request')
+        print("Hello from get_image_url")
         if obj.image and request:
             return request.build_absolute_uri(obj.image.url)
         return None
@@ -41,26 +40,25 @@ class ImageSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         # Use the temporary mapping to get the user name based on the image ID.
         return TEMP_TOKEN_USER_MAPPING.get(obj.id)
+
     def create(self, validated_data):
         validated_data.pop('user_name', None)
         return super().create(validated_data)
 
+
 class ExpiringLinkSerializer(serializers.ModelSerializer):
-    image = ImageSerializer(read_only=True)
+    user = serializers.SerializerMethodField()
+    token = serializers.CharField(read_only=True)
     is_expired = serializers.SerializerMethodField()
 
     class Meta:
         model = ExpiringLink
-        fields = ['id', 'image', 'token', 'is_expired']
+        fields = ['id', 'image', 'token', 'is_expired', 'user']
+
+    def get_user(self, obj):
+        # Assuming you have a mechanism to resolve user from token.
+        # Adjust according to your logic.
+        return VALID_TOKENS.get(obj.token, None)
 
     def get_is_expired(self, obj):
         return obj.is_expired()
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        if not user.account_tier.can_generate_expiring_link:
-            raise serializers.ValidationError("The user's account tier does not allow generating expiring links.")
-        image_id = self.context['view'].kwargs['image_id']
-        image = get_object_or_404(Image, id=image_id, user=user)
-        expiring_link_instance = ExpiringLink.objects.create(image=image, **validated_data)
-        return expiring_link_instance

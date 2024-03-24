@@ -4,17 +4,8 @@ from rest_framework.response import Response
 from .models import CustomUser, Image, ExpiringLink, AccountTier
 from .serializers import *
 from rest_framework.permissions import AllowAny
-from .constants import TEMP_TOKEN_USER_MAPPING
+from .constants import TEMP_TOKEN_USER_MAPPING, VALID_TOKENS
 
-VALID_TOKENS = {
-    'token123': 'User1',
-    'token456': 'User2',
-    'token789': 'User3',
-}
-
-
-# This is a simple, in-memory mapping. For demonstration purposes only.
-# TEMP_TOKEN_USER_MAPPING = {}
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CustomUser.objects.all()
@@ -64,11 +55,3 @@ class ExpiringLinkViewSet(viewsets.ModelViewSet):
         # Simply return all ExpiringLink objects.
         return ExpiringLink.objects.all()
 
-    # @action(detail=False, methods=['get'])
-    # def list_links(self, request):
-    #     # This custom action isn't necessary unless you want to customize
-    #     # the response further than what the default 'list' action provides.
-    #     # For simplicity, you could rely on the default 'list' implementation.
-    #     queryset = self.get_queryset()
-    #     serializer = self.get_serializer(queryset, many=True)
-    #     return Response(serializer.data)
